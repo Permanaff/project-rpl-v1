@@ -1,0 +1,375 @@
+{% extends 'layout.html' %}
+{% block head %}
+<title>New Star Cinplex</title>
+<link rel="stylesheet" href="/static/jquery/jquery.seat-charts.css">
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color:#fafafa;
+      }
+      a {
+        color: #b71a4c;
+      }
+      .front-indicator {
+        width: 345px;
+        height: 15px;
+        margin: 5px 32px 15px 50px;
+        background-color: #646464;	
+        color: #adadad;
+        text-align: center;
+        padding: 1px;
+        border-radius: 5px;
+        font-size: 10px;
+      }
+      /* .wrapper {
+        width: 100%;
+        text-align: center;
+        margin-top:150px;
+      } */
+      /* .container {
+        margin: 0 auto;
+        width: 500px;
+        text-align: left;
+      } */
+      .booking-details {
+        float: left;
+        text-align: left;
+        margin-left: 35px;
+        font-size: 12px;
+        position: relative;
+        height: 171px;
+      }
+      .booking-details h2 {
+        margin: 0px 0 10px 0;
+        font-size: 14px;
+      }
+      .booking-details h3 {
+        margin: 5px 5px 0 0;
+        font-size: 14px;
+      }
+      div.seatCharts-cell {
+        color: #182C4E;
+        height: 25px;
+        width: 25px;
+        line-height: 25px;
+        
+      }
+      div.seatCharts-seat {
+        color: #FFFFFF;
+        cursor: pointer;	
+      }
+      div.seatCharts-row {
+        height: 35px;
+      }
+      div.seatCharts-seat.available {
+        background-color: #B9DEA0;
+      
+      }
+      div.seatCharts-seat.available.first-class {
+      /* 	background: url(vip.png); */
+        background-color: #3a78c3;
+      }
+      div.seatCharts-seat.focused {
+        background-color: #84abdb;
+      }
+      div.seatCharts-seat.selected {
+        background-color: #e3e32c;
+      }
+      div.seatCharts-seat.unavailable {
+        background-color: #472B34;
+      }
+      div.seatCharts-container {
+        width: 500px;
+        padding: 20px;
+        float: left;
+      }
+      div.seatCharts-legend {
+        padding-left: 0px;
+        bottom: 16px;
+      }
+      ul.seatCharts-legendList {
+        padding-left: 0px;
+      }
+      span.seatCharts-legendDescription {
+        margin-left: 5px;
+        line-height: 30px;
+      }
+      .checkout-button {
+        display: block;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      #selected-seats {
+        max-height: 90px;
+        overflow-y: scroll;
+        overflow-x: none;
+        width: 170px;
+      }
+
+
+      </style>
+{%endblock%}
+
+{%block body%}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header" style="background-color: white;">
+            <div class="container">
+
+                <div class="booking-details mt-3">
+                    <h2 class="fw-bold" id="title-movie">Judul Film Disini</h2>
+                    <h3>Seats (<span id="counter">0</span>):<span class="fw-bold" id="selected-seats"></span></h3>
+                    <h3 id="cinema-name">Cinema : <span class="fw-bold" id="cinema">NSC Demak</span></h3>
+                    <h3 id="studio-name">Studio : <span id="studio" class="fw-bold">3</span></h3>
+                    <h3 id="datetime">
+                        <span id="date">Date :</span>
+                        <span id="time">Time :</span>
+                    </h3>
+                    
+                    
+                    <h3>Total Pembayaran: <b><span id="total">0</span></b></h3>
+                    <!-- <button class="checkout-button">Checkout &raquo;</button> -->
+                    
+                </div>  
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row"  id='main-body'>
+
+            </div>
+        </div>
+
+        <div class="card-footer" style="background-color: white;">
+            <div class="container d-flex justify-content-end" my-3>
+                <button class="btn btn-primary" id="next-btn">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/jquery/jquery.seat-charts.js"></script>   
+<script>
+    var firstSeatLabel = 1;
+    let selected_seat = [];
+    let price = 0;
+
+    const formatRupiah = (amount) => {
+        return amount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+    };
+
+
+    const seatGui = () => {
+        let $main = $('#main-body');
+        $(`
+                <div class="col-2"></div>
+                <div class="col">
+                    <div class="container d-flex justify-content-center">
+                        <div id="seat-map">
+                            <div class="front-indicator">Screen</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div id="legend"></div>
+                </div>
+        `).appendTo($main);
+    };
+
+    $(document).ready(function() {
+        
+        let updateButtonStatus = () => {
+            const button = $('#next-btn');
+            if (selected_seat.length === 0) {
+                button.prop('disabled', true);
+            } else {
+                button.prop('disabled', false);
+            }
+        };
+
+
+        updateButtonStatus()
+        seatGui()
+    var $cart = $('#selected-seats'),
+        $counter = $('#counter'),
+        $total = $('#total'),
+        sc = $('#seat-map').seatCharts({
+        map: [
+        '___fffffffffff',
+        '___fffffffffff',
+        '___fffffffffff',
+        '___fffffffffff',
+        '___fffffffffff',
+        'ff_fffffffffff',
+        'ff_fffffffffff',
+        'ff_fffffffffff',
+        'ffffffffffffff',
+        ],
+        seats: {
+        f: {
+            price   : 35000,
+            classes : 'first-class', //your custom CSS class
+            category: 'First Class'
+        },      
+        
+        },
+        naming : {
+        left : false,
+        top : false,
+        getLabel : function (character, row, column) {
+            // Daftar huruf yang digunakan untuk label kursi
+        var letters = 'JHGFEDCBA'; // tidak ada huruf I dan O
+
+        // Menghitung indeks huruf berdasarkan nomor baris
+        var index = row - 1;
+
+        // Mengambil karakter dari daftar huruf berdasarkan indeks
+        var seatLabelChar = letters[index];
+
+        if (row <= 5) {
+            return label = seatLabelChar + (column-3);
+            } else {
+            return label = seatLabelChar + column
+            }
+
+        return label;
+            
+        },
+        },
+        legend : {
+        node : $('#legend'),
+            items : [
+            [ 'f', 'available',   'Available' ],
+            [ 'f', 'unavailable', 'Already Booked'],
+            [ 'f', 'selected', 'Your Seat'],
+            ]         
+        },
+        click: function () {
+        if (this.status() == 'available') {
+            //let's create a new <li> which we'll add to the cart items
+            $('<span> '+this.settings.label+'</span>')
+            .attr('id', 'cart-item-'+this.settings.id)
+            .data('seatId', this.settings.id)
+            .appendTo($cart);
+
+            selected_seat.push(this.settings.id);
+            /*
+            * Lets up<a href="https://www.jqueryscript.net/time-clock/">date</a> the counter and total
+            *
+            * .find function will not find the current seat, because it will change its stauts only after return
+            * 'selected'. This is why we have to add 1 to the length and the current seat price to the total.
+            */
+            $counter.text(sc.find('selected').length+1);
+            price = recalculateTotal(sc)+this.data().price
+            $total.text(formatRupiah(recalculateTotal(sc)+this.data().price));
+            updateButtonStatus()
+            
+            return 'selected';
+        } else if (this.status() == 'selected') {
+            selected_seat.pop(this.settings.id)
+            //update the counter
+            $counter.text(sc.find('selected').length-1);
+            //and total
+            price = (recalculateTotal(sc)-this.data().price)
+            $total.text(formatRupiah(recalculateTotal(sc)-this.data().price));
+        
+            //remove the item from our cart
+            $('#cart-item-'+this.settings.id).remove();
+            updateButtonStatus()
+        
+            //seat has been vacated
+            return 'available';
+        } else if (this.status() == 'unavailable') {
+            //seat has been already booked
+            return 'unavailable';
+        } else {
+            return this.style();
+        }
+        }
+    });
+
+
+    //this will handle "[cancel]" link clicks
+    $('#selected-seats').on('click', '.cancel-cart-item', function () {
+        //let's just trigger Click event on the appropriate seat, so we don't have to repeat the logic here
+        sc.get($(this).parents('li:first').data('seatId')).click();
+    });
+
+    fetch('http://127.0.0.1:4000/get-unavailable-Seat')
+        .then(response => {
+            if (!response.ok) {
+            throw new Error('Terjadi kesalahan saat mengambil data.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            sc.get(data).status('unavailable')
+        })
+        .catch(error => {
+            console.error('Error:', error.message);
+        });
+
+    //let's pretend some seats have already been booked
+    // sc.get(['1_5', '4_6', '7_11', '7_10']).status('unavailable');
+
+    });
+
+    function recalculateTotal(sc) {
+    var total = 0;
+
+    //basically find every selected seat and sum its price
+    sc.find('selected').each(function () {
+    total += this.data().price;
+    });
+
+    return total;
+    };
+
+    const drinkChoose = () => {
+
+    };
+
+
+    let save_booking = () => {
+        let data = {
+            'user_id' : '1',
+            'id_schedule' : 'SCH001',
+            'id_drink' : '7 798062 545470',
+            'no_seat' : selected_seat,
+            'total' : price
+        };
+
+        let options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(data)
+        };
+
+        fetch('http://127.0.0.1:4000/save-booking', options)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Terjadi kesalahan saat mengirim data.');
+                }
+                return response.json(data);
+            })
+            .then(data => {
+                console.log('Respon dari server:', data);
+            })
+            .catch(error => {
+                console.log('Error:', error.message);
+            });
+    };
+
+    $('#next-btn').on('click', () => {
+        save_booking();
+    });;
+
+
+</script>
+
+{%endblock%}
