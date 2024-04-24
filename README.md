@@ -7,5 +7,6 @@ Instalasi
 2. instal requirement.txt pada masing-masing virtual envitrontment
 
    "pip install -r requirements.txt"
+3. run *py main.py* pada command prompt setiap environtment
     
  
