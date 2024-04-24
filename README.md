@@ -1,6 +1,6 @@
 Project Matakuliah Rekayasa Perangkat Lunak 
 
-Studi Kasus Website Bioskop 
+Studi Kasus Website Bioskop Flask
 
 Instalasi 
 1. Buat Virtual Environtemet pada folder client dan api
